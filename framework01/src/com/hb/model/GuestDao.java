@@ -20,17 +20,69 @@ public class GuestDao {
 	String url = "jdbc:oracle:thin:@localhost:1521:xe";
 	String id = "scott";
 	String pw = "tiger";
+	
+	public GuestDao() {
+		try {
+			Class.forName(driver);
+			conn = DriverManager.getConnection(url, id, pw);
+		} catch (Exception e) {
+			
+		}
+	}
 
 	public List<GuestDto> selectAll() {
 		
 		String sql = "SELECT * FROM GUEST01";
 		
-		List<GuestDto> list = new ArrayList<GuestDto>(); 
+		List<GuestDto> list = executeQuery(sql, new Object[]{});
+		
+		return list;
+	}
+	
+	
+	public GuestDto selectOne(int sabun) {
+		
+		String sql = "SELECT * FROM GUEST01 WHERE SABUN=?";
+		
+		List<GuestDto> list = executeQuery(sql, new Object[]{sabun});
+		
+		return list.get(0);
+	}
+	
+	
+	public void insertOne(int sabun, String name, String nalja, int pay) {
+		
+		String sql = "INSERT INTO GUEST01 (SABUN,NAME,NALJA,PAY) ";
+		sql+="VALUES (?,?,TO_DATE(?,'YYYY-MM-DD'),?)";
+		
+		Object[] objs = {sabun, name, nalja, pay};
+		executeUpdate(sql, objs);
+		
+	}
+
+
+	public void updateOne(int sabun, String name, int pay) {
+		
+		String sql = "UPDATE GUEST01 SET NAME=?,PAY=? WHERE SABUN=?";
+		executeUpdate(sql, new Object[]{name, pay, sabun});
+		
+	}
+	
+	
+	public void deleteOne(int sabun) {
+		String sql = "DELETE FROM GUEST01 WHERE SABUN=?";
+		executeUpdate(sql, new Object[]{sabun});
+	}
+	
+	
+	private List executeQuery(String sql,Object[] objs) {
+		
+		List<GuestDto> list = new ArrayList<GuestDto>();
 		
 		try {
-			Class.forName(driver);
-			conn = DriverManager.getConnection(url, id, pw);
 			pstmt = conn.prepareStatement(sql);
+			
+			for(int i=0; i<objs.length; i++) pstmt.setObject(i+1, objs[i]);
 			rs = pstmt.executeQuery();
 			
 			while(rs.next()) {
@@ -51,78 +103,20 @@ public class GuestDao {
 	}
 	
 	
-	public GuestDto selectOne(int sabun) {
-		
-		String sql = "SELECT * FROM GUEST01 WHERE SABUN=?";
-		
-		GuestDto bean = new GuestDto();
+	private void executeUpdate(String sql, Object[] objs) {
 		
 		try {
-			Class.forName(driver);
-			conn = DriverManager.getConnection(url, id, pw);
 			pstmt = conn.prepareStatement(sql);
-			pstmt.setInt(1, sabun);
-			rs = pstmt.executeQuery();
 			
-			if(rs.next()) {
-				bean.setSabun(rs.getInt("sabun"));
-				bean.setName(rs.getString("name"));
-				bean.setNalja(rs.getDate("nalja"));
-				bean.setPay(rs.getInt("pay"));
+			for(int i=0; i<objs.length; i++) {
+				pstmt.setObject(i+1, objs[i]);
 			}
+			pstmt.executeQuery();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			allClose();
 		}
-		
-		return bean;
-	}
-	
-	
-	public void insertOne(int sabun, String name, String nalja, int pay) {
-		
-		String sql = "INSERT INTO GUEST01 (SABUN,NAME,NALJA,PAY) ";
-		sql+="VALUES (?,?,TO_DATE(?,'YYYY-MM-DD'),?)";
-		
-		try {
-			Class.forName(driver);
-			conn = DriverManager.getConnection(url, id, pw);
-			pstmt = conn.prepareStatement(sql);
-			pstmt.setInt(1, sabun);
-			pstmt.setString(2, name);
-			pstmt.setString(3, nalja);
-			pstmt.setInt(4, pay);
-			pstmt.executeUpdate();
-			
-		} catch(Exception e) {
-			
-		} finally {
-			allClose();
-		}
-		
-	}
-
-
-	public void updateOne(int sabun, String name, int pay) {
-		
-		String sql = "UPDATE GUEST01 SET NAME=?,PAY=? WHERE SABUN=?";
-		
-		try {
-			Class.forName(driver);
-			conn = DriverManager.getConnection(url, id, pw);
-			pstmt = conn.prepareStatement(sql);
-			pstmt.setString(1, name);
-			pstmt.setInt(2, pay);
-			pstmt.setInt(3, sabun);
-			pstmt.executeUpdate();
-			
-		} catch(Exception e) {
-			
-		} finally {
-			allClose();
-		}
-		
 	}
 	
 	
